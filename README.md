@@ -119,3 +119,38 @@ reply.py의 __str__인데, 대충 저렇게 해서 이렇게 나온다.
 
 ## admin.py
 - 되게 편하다..
+
+# 겪은 오류와 해결 과정
+- models.py를 패키지로 분리하여 두었는데, 이상하게 등록(마이그레이션)이 안됐다.
+- \_\_init__파일에 임포트를 하지 않아서 생긴 문제였다.  
+```python
+from django.db import models
+from .user import User, UserProfile
+
+from .post import Post
+from .comment import Comment
+from .reply import Reply
+from .category import Category
+from .user_subject import UserSubject
+from .subject import Subject
+from .category import Category
+from .subject_review import SubjectReview
+```
+- 모델들을 하나씩 임포트하였다.
+
+# 궁금한 점
+
+- 바로 위에랑 이어지는데, 저거 한번에 임포트하는 방법이 있나요?
+- 그리고 위에도 언급했지만 시간표 time을 짜는 효율적인 방법이 무엇일까요?
+
+# 새롭게 배운 점 
+
+- ManyToManyField의 through 기능 (위에 언급하였음)
+- CharField, TextField는 null=True보다 blank=True 쓸 것
+
+# 느낀 점 및 회고
+- 장고의 편의성은 파이썬을 따라간다(일단 파이썬이라 스트링 관리도 쉽다..)
+- 뭔가 auth도 편할 것 같다(절대 인증/인가를 무시한 적 없습니다)
+- 아직 간단한 모델들만 구현해서 그런지.. 장고의 편의성에 힘입어 빠르게 구현할 수 있었던 것 같다.
+- 근데 간단한 모델 구현임에도 고려할게 생각보다 많았다.
+- 커밋을 보면 번복이 꽤 많은데, 번복하지 않는 개발자가 되고싶다.
