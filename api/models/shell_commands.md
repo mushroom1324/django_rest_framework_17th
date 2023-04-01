@@ -74,8 +74,12 @@ from api.models.category import Category
 from api.models.user_subject import UserSubject
 from api.models.subject import Subject
 from api.models.category import Category
-user1 = User.objects.get(pk=6)
+user1 = User.objects.get(username='mushroom1324')
 user_profile1 = UserProfile.objects.get(user=user1) 
 user_profile1.friend_list.all()
+user2 = User.objects.get(username='takgyun')
+user_profile2 = UserProfile.objects.get(user=user2) 
+user_profile2.friend_list.all()
+
 ```
 

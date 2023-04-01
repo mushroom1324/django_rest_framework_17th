@@ -1,5 +1,5 @@
 from django.db import models
-from .user_profile import User, UserProfile
+from .user import User, UserProfile
 from .post import Post
 from .comment import Comment
 from .reply import Reply
