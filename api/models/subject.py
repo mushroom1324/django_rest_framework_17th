@@ -6,7 +6,7 @@ class Subject(models.Model):
     professor_name = models.CharField(max_length=255)
     contact = models.CharField(max_length=255)
     location_info = models.CharField(max_length=255)
-    is_cyber = models.BooleanField()
+    is_cyber = models.BooleanField(default=False)
     time = models.TextField(blank=True)
 
     def __str__(self):
