@@ -9,3 +9,7 @@ class Reply(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     likes = models.PositiveIntegerField(default=0)
+
+    def __str__(self):
+        return str(self.comment.__str__()) + "의 답글: " + str(self.content[:10])
+

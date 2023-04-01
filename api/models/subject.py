@@ -7,4 +7,7 @@ class Subject(models.Model):
     contact = models.CharField(max_length=255)
     location_info = models.CharField(max_length=255)
     is_cyber = models.BooleanField()
-    time = models.TextField()
+    time = models.TextField(blank=True)
+
+    def __str__(self):
+        return self.subject_name
