@@ -1,7 +1,7 @@
 from django.db import models
 
 from api.models.base_model import BaseModel
-from api.models.subject import Subject
+from subject.models.subject import Subject
 
 
 class SubjectReview(BaseModel):

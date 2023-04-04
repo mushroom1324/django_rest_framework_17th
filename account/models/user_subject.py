@@ -1,7 +1,7 @@
 from django.db import models
 
 from api.models import UserProfile
-from api.models.subject import Subject
+from subject.models.subject import Subject
 
 
 class UserSubject(models.Model):

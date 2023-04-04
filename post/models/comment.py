@@ -1,6 +1,6 @@
 from django.db import models
 
-from api.models.post import Post
+from post.models.post import Post
 from api.models.base_model import BaseModel
 
 

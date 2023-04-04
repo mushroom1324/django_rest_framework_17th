@@ -1,9 +1,9 @@
 from django.db import models
 
-from .base_model import BaseModel
-from .category import Category
-from .subject import Subject
-from .user import User
+from api.models.base_model import BaseModel
+from post.models.category import Category
+from subject.models.subject import Subject
+from account.models.user import User
 
 
 class Post(BaseModel):
