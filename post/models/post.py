@@ -10,8 +10,10 @@ class Post(BaseModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     subject = models.ForeignKey(Subject, on_delete=models.CASCADE, null=True)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
+
     title = models.CharField(max_length=255)
     content = models.TextField()
+
     likes = models.PositiveIntegerField(default=0)
 
     def __str__(self):

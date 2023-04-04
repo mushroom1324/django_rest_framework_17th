@@ -6,7 +6,9 @@ from subject.models.subject import Subject
 
 class SubjectReview(BaseModel):
     subject = models.ForeignKey(Subject, on_delete=models.CASCADE)
+
     content = models.TextField(blank=False)
+
     rate = models.PositiveIntegerField(default=0)
 
     def __str__(self):

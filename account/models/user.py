@@ -1,11 +1,11 @@
 from django.db import models
-from django.contrib.auth.models import User
+
+from django.contrib.auth.models import AbstractUser
 
 
-class UserProfile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    friend_list = models.ManyToManyField('self', blank=True)  # ManyToManyField
+class User(AbstractUser):
+    friend_list = models.ManyToManyField('self', blank=True)
+    profile_image = models.ImageField(upload_to='profile_image', blank=True, null=True)
 
     def __str__(self):
-        return self.user.__str__()  # user로 들어가서 user의 str을 호출(username이 default)
-
+        return self.username

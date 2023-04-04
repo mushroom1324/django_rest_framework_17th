@@ -1,11 +1,11 @@
 from django.db import models
 
-from account.models.user import UserProfile
+from account.models.user import User
 from subject.models.subject import Subject
 
 
 class UserSubject(models.Model):
-    user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     subject = models.ForeignKey(Subject, on_delete=models.CASCADE)
 
     def __str__(self):
