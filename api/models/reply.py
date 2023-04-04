@@ -1,13 +1,12 @@
 from django.db import models
 
+from api.models.base_model import BaseModel
 from api.models.comment import Comment
 
 
-class Reply(models.Model):
+class Reply(BaseModel):
     comment = models.ForeignKey(Comment, on_delete=models.CASCADE)
     content = models.TextField(blank=False)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
     likes = models.PositiveIntegerField(default=0)
 
     def __str__(self):
