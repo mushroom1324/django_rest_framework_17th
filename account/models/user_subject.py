@@ -1,6 +1,6 @@
 from django.db import models
 
-from api.models import UserProfile
+from account.models.user import UserProfile
 from subject.models.subject import Subject
 
 
