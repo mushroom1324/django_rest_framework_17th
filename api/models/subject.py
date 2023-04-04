@@ -1,0 +1,13 @@
+from django.db import models
+
+
+class Subject(models.Model):
+    subject_name = models.CharField(max_length=255)
+    professor_name = models.CharField(max_length=255)
+    contact = models.CharField(max_length=255)
+    location_info = models.CharField(max_length=255)
+    is_cyber = models.BooleanField(default=False)
+    time = models.TextField(blank=True)
+
+    def __str__(self):
+        return self.subject_name
