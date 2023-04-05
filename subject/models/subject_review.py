@@ -1,4 +1,5 @@
 from django.db import models
+from rest_framework import serializers
 
 from api.models.base_model import BaseModel
 from subject.models.subject import Subject
@@ -13,3 +14,9 @@ class SubjectReview(BaseModel):
 
     def __str__(self):
         return "리뷰: " + str(self.subject)
+
+
+class SubjectReviewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SubjectReview
+        fields = ('id', 'subject', 'content', 'rate', 'created_at', 'updated_at')

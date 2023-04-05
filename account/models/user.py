@@ -1,4 +1,5 @@
 from django.db import models
+from rest_framework import serializers
 
 from django.contrib.auth.models import AbstractUser
 
@@ -9,3 +10,9 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.username
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('id', 'username', 'email', 'first_name', 'last_name', 'profile_image', 'friend_list')
