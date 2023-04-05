@@ -8,7 +8,6 @@ from account.models import User
 from account.models.serializers import UserSerializer
 
 user = User.objects.get(username='test')
-print(user)
 serializer = UserSerializer(user)
 serializer.data
 
