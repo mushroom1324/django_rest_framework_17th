@@ -1,5 +1,4 @@
 from django.db import models
-from rest_framework import serializers
 
 from api.models.base_model import BaseModel
 from post.models.category import Category
@@ -20,8 +19,4 @@ class Post(BaseModel):
     def __str__(self):
         return self.title
 
-class PostSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Post
-        fields = ('id', 'user', 'subject', 'category', 'title', 'content', 'likes', 'created_at', 'updated_at')
-        
+

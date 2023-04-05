@@ -1,5 +1,4 @@
 from django.db import models
-from rest_framework import serializers
 
 
 class Subject(models.Model):
@@ -15,7 +14,3 @@ class Subject(models.Model):
         return self.subject_name
 
 
-class SubjectSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Subject
-        fields = ('id', 'subject_name', 'professor_name', 'contact', 'location_info', 'time', 'is_cyber')
