@@ -1,26 +1,25 @@
 from django.shortcuts import render
-
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.parsers import JSONParser
-from subject.models import Subject
-from subject.models.serializers import SubjectSerializer
+from post.models import Post
+from post.models.serializers import PostSerializer
 
 
 # Create your views here.
 @csrf_exempt
-def subject_list(request):
+def post_list(request):
     """
-    List all code subjects, or create a new subject.
+    List all code posts, or create a new post.
     """
     if request.method == 'GET':
-        subjects = Subject.objects.all()
-        serializer = SubjectSerializer(subjects, many=True)
+        posts = Post.objects.all()
+        serializer = PostSerializer(posts, many=True)
         return JsonResponse(serializer.data, safe=False)
 
     elif request.method == 'POST':
         data = JSONParser().parse(request)
-        serializer = SubjectSerializer(data=data)
+        serializer = PostSerializer(data=data)
         if serializer.is_valid():
             serializer.save()
             return JsonResponse(serializer.data, status=201)
