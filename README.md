@@ -154,3 +154,189 @@ from .subject_review import SubjectReview
 - 아직 간단한 모델들만 구현해서 그런지.. 장고의 편의성에 힘입어 빠르게 구현할 수 있었던 것 같다.
 - 근데 간단한 모델 구현임에도 고려할게 생각보다 많았다.
 - 커밋을 보면 번복이 꽤 많은데, 번복하지 않는 개발자가 되고싶다.
+
+
+# CEOS 3주차 미션
+
+## 미션 전에..
+- 지난 주차 과제에서 아쉬웠던 점들을 개선해보자.
+
+### BaseModel
+- 모델들의 공통적인 필드들을 추출하여 모델을 만들어보자.
+- 추출한 필드들은 다음과 같다.
+    - created_at
+    - updated_at
+    - deleted_at
+    - is_deleted
+
+``` python
+from django.db import models
+from datetime import datetime
+
+
+class BaseModel(models.Model):
+
+    is_deleted = models.BooleanField(default=False)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    deleted_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        abstract = True
+
+    def delete(self, using=None, keep_parents=False):
+        self.is_deleted = True
+        self.deleted_at = datetime.now()
+        self.save()
+```
+- soft delete를 구현하기 위해 delete 메소드를 오버라이딩 하였다.
+- is_deleted 필드를 추가하여, 삭제 여부를 확인할 수 있도록 하였다.
+
+### 앱 단위 분리
+- 지난 주차에선 models 패키지에 모델들을 모아놨다.
+- 이번 주차에는 앱 단위로 분리해보자:
+  - account: user, user_subject
+  - post: post, comment, category
+  - suject: subject, subject_review
+- 앱 단위로 분리하니 임포트가 편해졌다.
+- 생각보다 임포트가 어렵지도 않았다. 왜 진작 안했지
+
+### AbstractUser
+- 지난 주차에서 OneToOne method로 유저를 확장했다.
+- 쿼리를 짜는 과정에서 비효율적이라고 판단했다.
+- AbstractUser를 상속받아 확장했다.
+> AUTH_USER_MODEL = "account.User"
+- settings.py에 위와 같이 설정해주면 AbstractUser를 상속받은 User 모델을 사용할 수 있다.
+
+
+## 목표
+- CBV를 이용한 API 구현
+- 나는 한 파일에 뭔가가 여러개 들어있는 꼴을 못보겠다.
+- 노드 개발하면서 많이 데여서 그런 것 같다.
+- 최대한 패키지로 만들어서 분리하였다.
+
+### Serializer
+- JSON <---> 객체 해주는 놈이다.
+- 스프링의 Jackson과 비슷하다.
+
+### 에러
+
+### api/views/subject_list_view.py
+``` python
+@csrf_exempt
+def subject_list(request):
+    """
+    List all code subjects, or create a new subject.
+    """
+    if request.method == 'GET':
+        subjects = Subject.objects.all()
+        serializer = SubjectSerializer(subjects, many=True)
+        return JsonResponse(serializer.data, safe=False)
+
+    elif request.method == 'POST':
+        data = JSONParser().parse(request)
+        serializer = SubjectSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return JsonResponse(serializer.data, status=201)
+        return JsonResponse(serializer.errors, status=400)
+```
+- 물론 'subject/subjects/' 로도 접근 가능하게 구현했다.
+- 하지만 api 앱에서 여러 모델 관리를 하고자 한다.
+
+### HTTP Status Code
+- 보시면 JsonResponse에 status를 argument로 집어넣는다.
+- 여러분은 200번대를 보면 행복하고, 400번대를 보면 불안해야 한다.
+- 500번대는 없어야 한다. 600번대는 본 적이 없는데 안보고싶다.
+
+#### Status Code List
+- 200번대: 성공
+  - 201: Created
+- 300번대: 리다이렉트
+- 400번대: 클라이언트 에러
+  - 400: Bad Request
+- 500번대: 서버 에러
+- 600번대: 데이터베이스 에러
+
+### 아무튼 PostMan을 이용해 API를 테스트해보자.
+1. **GET** api/subjects/ 로 리스트를 모두 출력하자.
+<img width="1013" alt="Screen Shot 2023-04-06 at 3 37 33 PM" src="https://user-images.githubusercontent.com/76674422/230291665-0a295f54-be94-40a2-8f4a-665402438fd4.png">
+- 캬
+
+2. **GET** api/subjects/<id> 로 특정 subject를 출력하자.
+<img width="1014" alt="Screen Shot 2023-04-06 at 3 38 15 PM" src="https://user-images.githubusercontent.com/76674422/230291827-a50b532f-22d9-4db2-b83a-a594243e59ca.png">
+- 캬
+
+3. **POST** api/subjects/ 로 subject를 생성하자.
+<img width="1013" alt="Screen Shot 2023-04-06 at 3 44 30 PM" src="https://user-images.githubusercontent.com/76674422/230293011-0d4b5f88-6886-46c4-b5ea-34e4abb17ef5.png">
+- 캬
+
+### ViewSet으로 리팩토링하기
+- ViewSet은 View를 묶어주는 역할을 한다.
+- '모든 데이터를 가져오는 API' 를 ViewSet으로 리팩토링하자.
+
+api/views/subject_list_view.py
+``` python
+from rest_framework.viewsets import ModelViewSet
+from subject.models import Subject
+from subject.models.serializers import SubjectSerializer
+
+
+class SubjectViewSet(ModelViewSet):
+    queryset = Subject.objects.all()
+    serializer_class = SubjectSerializer
+
+
+subject_list = SubjectViewSet.as_view({
+    'get': 'list',
+    'post': 'create'
+})
+```
+
+api/views/subject_detail_view.py
+``` python
+from rest_framework.viewsets import ModelViewSet
+from subject.models import Subject
+from subject.models.serializers import SubjectSerializer
+
+
+class SubjectViewSet(ModelViewSet):
+    queryset = Subject.objects.all()
+    serializer_class = SubjectSerializer
+
+
+subject_detail = SubjectViewSet.as_view({
+    'get': 'retrieve',
+    'put': 'update',
+    'patch': 'partial_update',
+    'delete': 'destroy'
+})
+```
+- 일단 PostMan으로 테스트 해봤는데, 잘 작동한다.
+- 그런데 지금 보이는 바와 같이, 중복된 코드가 너무 많이 나온다.
+
+### 중복을 제거하자
+- 1차 시도: __init__에 SubjectViewSet을 넣어주자.
+  - 이렇게 하면 각각의 view에 SubjectViewSet이 들어가지 않는다. (import 문제)
+  - 애초에 __init__은 로직 넣으라고 있는 파일이 아닌 것 같다.
+  - 이런식으로 코딩하면 사장님이 월급을 안주신다.
+- 2차 시도: subject_list_view.py에 SubjectViewSet을 넣어주자.
+
+api/views/subject_detail_view.py
+``` python
+from .subject_list_view import SubjectViewSet
+
+subject_detail = SubjectViewSet.as_view({
+    'get': 'retrieve',
+    'put': 'update',
+    'patch': 'partial_update',
+    'delete': 'destroy'
+}) 
+```
+- 중복은 제거되었다.
+- 근데 이렇게 하면 subject_list_view.py에 SubjectViewSet이 들어가게 된다.
+- 나중에 view가 많아지면, SubjectViewSet을 넣을 위치를 정하는 근거를 뭘로 정해야 할까?
+- (정답을 알려주세요)
+
+### filter 기능 구현하기
