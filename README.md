@@ -348,7 +348,20 @@ subject_detail = SubjectViewSet.as_view({
 - 중복은 제거되었다.
 - 근데 이렇게 하면 subject_list_view.py에 SubjectViewSet이 들어가게 된다.
 - 나중에 view가 많아지면, SubjectViewSet을 넣을 위치를 정하는 근거를 뭘로 정해야 할까?
-- (밑에서 해당 문제를 해결하였다)
+- (수정) 3차 시도: subject_view.py에 SubjectViewSet을 넣어주고 각각에 import 해준다.
+- 이렇게 하는게 최선인 것 같다.
+
+api/views/subject_list_view.py
+```python
+from .subject_view import SubjectViewSet
+
+
+subject_list = SubjectViewSet.as_view({
+    'get': 'list',
+    'post': 'create'
+})
+```
+- 분리해서 두니 깔끔하죠?
 
 ### filter 기능 구현하기
 - filterset을 이용해 filter 기능을 구현해보자.
@@ -380,7 +393,7 @@ class SubjectViewSet(ModelViewSet):
 
 ### method를 이용해 필터링하기
 - filterset_fields를 이용해 필터링을 할 수 있지만, 다양한 방법으로 필터링을 할 수 있다.
-- 현재 코드가 더러워졌다. (list_view에 필터 기능이 들어가있다)
+- 일단 현재 코드가 더러워졌다. (list_view에 필터 기능이 들어가있다)
 - 제거 후 api/views/subject_filter_view.py를 만들어서 관리해보자.
 
 api/views/subject_filter_view.py
@@ -485,11 +498,14 @@ class SubjectFilter(FilterSet):
 <img width="1440" alt="Screen Shot 2023-04-07 at 6 53 04 PM" src="https://user-images.githubusercontent.com/76674422/230588273-f524f8f3-f768-4df8-a57d-5f3ecb97d70c.png">
 - 그럼 왜 굳이 따로 명시해뒀지??
 
-### argument로 속성 부여
+### filters.Filter의 argument로 속성 부여
 - `subject_name`과 `professor_name`은 `lookup_expr`를 이용해 필터링을 하였다.
 - 이렇게 하면 '**정확히 일치하는 문자**'가 아닌 '**포함하는 문자**'를 검색할 수 있다.
 - ex) '어셈' 만 쳐도 '어셈블리언어및실습'을 검색할 수 있다.
 
+<img width="1440" alt="Screen Shot 2023-04-07 at 7 57 02 PM" src="https://user-images.githubusercontent.com/76674422/230597412-bb1ce497-cbd3-40fa-acf0-cc08fe4ad4c3.png">
+
+- 사진은 없지만 DRF에서 POST도 잘 동작하는걸 확인했다.
 
 ### method로 필터링 커스텀
 - method를 이용하면 좀 더 특별한 필터링이 가능할 것 같다. (ex: 일정 좋아요 수를 넘는 댓글 display)
@@ -498,6 +514,11 @@ class SubjectFilter(FilterSet):
 # 후기
 - 생각보다 할 게 많았다. 
 - 모든 기능들에 대한 view, filter를 구현할 수 있겠지만.. 시간상.. 하지 못했다.
+### DRF with Browser
 - 솔직히 PostMan을 써온 사람으로서, 처음엔 DRF 브라우저 기능에 대한 반감이 있었다. (PostMan과의 의리)
 - 근데 DRF 브라우저 기능이 너무 편하다.
 - admin 페이지도 그렇고, 개발자를 잘 챙겨주는 모습에 감동했다.
+### Overall
+- 그럼 이제 '최소한의 장고'에 대해 이해한 것 같다.
+- 걱정이 된다. 배포 과제 잘 마칠 수 있을까..?
+<img width="707" alt="Screen Shot 2023-04-07 at 7 53 05 PM" src="https://user-images.githubusercontent.com/76674422/230596998-16e435e1-3360-4864-9c93-1b636298ea3a.png">
