@@ -1,11 +1,4 @@
-from rest_framework.viewsets import ModelViewSet
-from subject.models import Subject
-from subject.models.serializers import SubjectSerializer
-
-
-class SubjectViewSet(ModelViewSet):
-    queryset = Subject.objects.all()
-    serializer_class = SubjectSerializer
+from .subject_view import SubjectViewSet
 
 
 subject_list = SubjectViewSet.as_view({

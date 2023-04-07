@@ -1,4 +1,4 @@
-from .subject_list_view import SubjectViewSet
+from .subject_view import SubjectViewSet
 
 subject_detail = SubjectViewSet.as_view({
     'get': 'retrieve',
