@@ -12,4 +12,4 @@ class SubjectFilter(FilterSet):
         fields = ['subject_name', 'professor_name', 'is_cyber']
 
     def is_cyber_filter(self, queryset, name, value):
-        return queryset.filter(is_cyber=True) if value else queryset.filter(is_cyber=False)
+        return queryset.filter(is_cyber=value)
