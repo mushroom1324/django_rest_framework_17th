@@ -193,6 +193,10 @@ class BaseModel(models.Model):
 - soft delete를 구현하기 위해 delete 메소드를 오버라이딩 하였다.
 - is_deleted 필드를 추가하여, 삭제 여부를 확인할 수 있도록 하였다.
 
+### reply.py 제거
+- 지난 주차에는 comment와 reply를 분리하였다.
+- 하지만, comment에 parent 필드를 추가하여 reply를 대체하였다.
+
 ### 앱 단위 분리
 - 지난 주차에선 models 패키지에 모델들을 모아놨다.
 - 이번 주차에는 앱 단위로 분리해보자:
@@ -219,8 +223,6 @@ class BaseModel(models.Model):
 ### Serializer
 - JSON <---> 객체 해주는 놈이다.
 - 스프링의 Jackson과 비슷하다.
-
-### 에러
 
 ### api/views/subject_list_view.py
 ``` python
@@ -262,15 +264,13 @@ def subject_list(request):
 ### 아무튼 PostMan을 이용해 API를 테스트해보자.
 1. **GET** api/subjects/ 로 리스트를 모두 출력하자.
 <img width="1013" alt="Screen Shot 2023-04-06 at 3 37 33 PM" src="https://user-images.githubusercontent.com/76674422/230291665-0a295f54-be94-40a2-8f4a-665402438fd4.png">
-- 캬
 
 2. **GET** api/subjects/<id> 로 특정 subject를 출력하자.
 <img width="1014" alt="Screen Shot 2023-04-06 at 3 38 15 PM" src="https://user-images.githubusercontent.com/76674422/230291827-a50b532f-22d9-4db2-b83a-a594243e59ca.png">
-- 캬
 
 3. **POST** api/subjects/ 로 subject를 생성하자.
 <img width="1013" alt="Screen Shot 2023-04-06 at 3 44 30 PM" src="https://user-images.githubusercontent.com/76674422/230293011-0d4b5f88-6886-46c4-b5ea-34e4abb17ef5.png">
-- 캬
+- 난 무엇이든 해내
 
 ### ViewSet으로 리팩토링하기
 - ViewSet은 View를 묶어주는 역할을 한다.
@@ -314,6 +314,17 @@ subject_detail = SubjectViewSet.as_view({
 })
 ```
 - 일단 PostMan으로 테스트 해봤는데, 잘 작동한다.
+### 설명
+- ModelViewSet은 Model과 Serializer를 기반으로 한다.
+- queryset은 Model의 모든 객체를 가져온다.
+- serializer_class는 Serializer를 가져온다.
+- as_view()는 View를 가져온다.
+- 'get': 'retrieve'는 GET 요청이 들어오면 retrieve 함수를 실행한다.
+#### retrieve가 뭔데요
+- retrieve는 ModelViewSet의 함수이다.
+- GET posts/\<int:pk>/ 같이 특정 객체를 가져올 때 사용한다.
+
+#### 어쨌든 작동이 잘 된다
 - 그런데 지금 보이는 바와 같이, 중복된 코드가 너무 많이 나온다.
 
 ### 중복을 제거하자
@@ -337,6 +348,156 @@ subject_detail = SubjectViewSet.as_view({
 - 중복은 제거되었다.
 - 근데 이렇게 하면 subject_list_view.py에 SubjectViewSet이 들어가게 된다.
 - 나중에 view가 많아지면, SubjectViewSet을 넣을 위치를 정하는 근거를 뭘로 정해야 할까?
-- (정답을 알려주세요)
+- (밑에서 해당 문제를 해결하였다)
 
 ### filter 기능 구현하기
+- filterset을 이용해 filter 기능을 구현해보자.
+- 요구사항:
+  - 최소 하나의 필터는 method를 이용해 구현해 주세요
+  - 문자열 단순 일치 이외의 필터링은 django ORM filter 기능을 활용하면 좋습니다👍
+
+
+## FilterSet
+> Django-filter는 view에 작성된 일반적인 코드를 계속 쓰는 부담을 덜어주는 일반적이고 재사용가능한 어플리케이션입니다. 구체적으로는 사용자들은 모델의 필드를 기반으로 queryset을 필터링 할 수 있습니다.
+- 대충 '필터링 편한거' 라고 이해했다.
+- model 패키지에 filter 패키지를 만들어보자.
+- django_filters를 import하기 위해 django_filter를 설치해야 한다.
+> $ pip install django-filter
+
+api/views/subject_list_view.py
+``` python
+...
+class SubjectViewSet(ModelViewSet):
+    queryset = Subject.objects.all()
+    serializer_class = SubjectSerializer
+    filterset_fields = ['subject_name', 'professor_name']
+...
+```
+- `filterset_fields`를 이용해 필터링을 할 수 있다.
+- *subject_name*과 *professor_name*으로 필터링이 가능하다.
+- `SubjectViewSet` class 안에 `filterset_fields`를 넣어주는 이유는, 내부에 `queryset`이 모든 객체를 가져오기 떄문이다.
+- 그래서 `filterset_fields`를 넣어주면, `queryset`을 필터링 할 수 있다.
+
+### method를 이용해 필터링하기
+- filterset_fields를 이용해 필터링을 할 수 있지만, 다양한 방법으로 필터링을 할 수 있다.
+- 현재 코드가 더러워졌다. (list_view에 필터 기능이 들어가있다)
+- 제거 후 api/views/subject_filter_view.py를 만들어서 관리해보자.
+
+api/views/subject_filter_view.py
+``` python
+from django_filters.rest_framework import FilterSet, filters
+
+
+class SubjectFilter(FilterSet):
+    subject_name = filters.CharFilter(lookup_expr='icontains')
+    professor_name = filters.CharFilter(lookup_expr='icontains')
+    is_cyber = filters.BooleanFilter(lookup_expr='exact')
+
+    class Meta:
+        fields = ['subject_name', 'professor_name', 'is_cyber']
+
+    def filter_subject_name(self, queryset, name, value):
+        return queryset.filter(subject_name__icontains=value)
+
+    def filter_professor_name(self, queryset, name, value):
+        return queryset.filter(professor_name__icontains=value)
+
+    def filter_is_cyber(self, queryset, name, value):
+        return queryset.filter(is_cyber=value)
+```
+- 초기 디자인 (밑에 수정하였다)
+
+`lookup_expr` 는 필터링을 할 때, 어떤 방식으로 필터링을 할 것인지를 정해주는 것이다.
+- `icontains`는 대소문자를 구분하지 않고, 문자열이 포함되어 있는지를 확인한다.
+- `exact`는 대소문자를 구분하고, 문자열이 정확히 일치하는지를 확인한다.
+
+- 근데.. DRF 필터 옵션에 is_cyber가 안보인다.. 왜지
+
+
+## 오류 해결
+- 문제점
+  - `is_cyber` 필터링이 안된다.
+  - method 방식을 사용하지 않는데 각각 필터의 메서드를 정의해두었다.
+
+
+
+- 일단 디렉토리 리팩토링을 하였다.
+  - views
+    - \_\_init__.py
+    - **subject_view.py**
+    - subject_list_view.py
+    - subject_detail_view.py
+    - **subject_filter_view.py**
+
+api/views/subject_view.py
+```python
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.viewsets import ModelViewSet
+from subject.models import Subject
+from subject.models.serializers import SubjectSerializer
+from .subject_filter_view import SubjectFilter
+
+
+class SubjectViewSet(ModelViewSet):
+    queryset = Subject.objects.all()
+    serializer_class = SubjectSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = SubjectFilter
+    
+```
+- subject_list_view.py에 있던 `SubjectViewSet`을 subject_view.py로 옮겼다.
+- SubjectViewSet에 filterset_class에 `SubjectFilter`를 넣어주었다.
+- `SubjectFilter`는 subject_filter_view.py에 있다.
+
+api/views/subject_filter_view.py
+```python
+from django_filters.rest_framework import FilterSet, filters
+from subject.models import Subject
+
+
+class SubjectFilter(FilterSet):
+    subject_name = filters.CharFilter(lookup_expr='icontains', label='과목명')
+    professor_name = filters.CharFilter(lookup_expr='icontains', label='교수명')
+    is_cyber = filters.BooleanFilter(method='is_cyber_filter', label='비대면 여부')
+
+    class Meta:
+        model = Subject
+        fields = ['subject_name', 'professor_name', 'is_cyber']
+
+    def is_cyber_filter(self, queryset, name, value):
+        return queryset.filter(is_cyber=True) if value else queryset.filter(is_cyber=False)
+```
+- is_cyber_filter method를 만들어서 구현했다
+- 오류 해결! 다 잘 작동한다. 그런데..
+
+```python
+from django_filters.rest_framework import FilterSet
+from subject.models import Subject
+
+
+class SubjectFilter(FilterSet):
+    class Meta:
+        model = Subject
+        fields = ['subject_name', 'professor_name', 'is_cyber']
+```
+- 이렇게만 둬도 잘 작동한다.
+
+<img width="1440" alt="Screen Shot 2023-04-07 at 6 53 04 PM" src="https://user-images.githubusercontent.com/76674422/230588273-f524f8f3-f768-4df8-a57d-5f3ecb97d70c.png">
+- 그럼 왜 굳이 따로 명시해뒀지??
+
+### argument로 속성 부여
+- `subject_name`과 `professor_name`은 `lookup_expr`를 이용해 필터링을 하였다.
+- 이렇게 하면 '**정확히 일치하는 문자**'가 아닌 '**포함하는 문자**'를 검색할 수 있다.
+- ex) '어셈' 만 쳐도 '어셈블리언어및실습'을 검색할 수 있다.
+
+
+### method로 필터링 커스텀
+- method를 이용하면 좀 더 특별한 필터링이 가능할 것 같다. (ex: 일정 좋아요 수를 넘는 댓글 display)
+
+
+# 후기
+- 생각보다 할 게 많았다. 
+- 모든 기능들에 대한 view, filter를 구현할 수 있겠지만.. 시간상.. 하지 못했다.
+- 솔직히 PostMan을 써온 사람으로서, 처음엔 DRF 브라우저 기능에 대한 반감이 있었다. (PostMan과의 의리)
+- 근데 DRF 브라우저 기능이 너무 편하다.
+- admin 페이지도 그렇고, 개발자를 잘 챙겨주는 모습에 감동했다.
