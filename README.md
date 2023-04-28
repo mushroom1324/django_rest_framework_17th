@@ -623,3 +623,34 @@ urlpatterns = [
 ```
 - 이제 `http://localhost:8080/posts/` 로 접근할 수 있습니다.
 - 감사합니다.
+
+## Soft deletion
+- 깜빡 잊고있었는데 이것도 해봤다.
+- 다양한 방법이 있는데, 외부 라이브러리 `safedelete`를 사용해봤다.
+
+https://django-safedelete.readthedocs.io/en/latest/models.html
+
+``` python
+from django.db import models
+from safedelete.models import SafeDeleteModel
+from safedelete.models import SOFT_DELETE_CASCADE
+
+
+class Subject(SafeDeleteModel):
+    _safedelete_policy = SOFT_DELETE_CASCADE
+    subject_name = models.CharField(max_length=255)
+    professor_name = models.CharField(max_length=255)
+    contact = models.CharField(max_length=255)
+    location_info = models.CharField(max_length=255, blank=True)
+    time = models.TextField(blank=True)
+
+    is_cyber = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.subject_name
+```
+- 이렇게 하면, `delete()` 메소드를 사용할 때, `deleted_at`에 현재 시간이 저장된다.
+
+<img width="613" alt="Screen Shot 2023-04-28 at 1 37 53 PM" src="https://user-images.githubusercontent.com/76674422/235055419-43246fde-1a7a-46a4-b4d2-70cd3b24f46b.png">
+
+- 난 무엇이든 해내
