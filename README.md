@@ -448,7 +448,7 @@ api/views/subject_view.py
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.viewsets import ModelViewSet
 from subject.models import Subject
-from post.serializers import SubjectSerializer
+from subject.serializers import SubjectSerializer
 from .subject_filter_view import SubjectFilter
 
 
@@ -654,3 +654,56 @@ class Subject(SafeDeleteModel):
 <img width="613" alt="Screen Shot 2023-04-28 at 1 37 53 PM" src="https://user-images.githubusercontent.com/76674422/235055419-43246fde-1a7a-46a4-b4d2-70cd3b24f46b.png">
 
 - 난 무엇이든 해내
+
+- 근데 이렇게 하는거 별로 안좋은 것 같긴 하다. 내가 구현하면 되는데 굳이 이걸 왜 쓰지
+- SafeDeleteModel을 상속받는것도 유연성이 떨어져서 별로인 것 같다. (AbstractUser를 상속받는 account model에는 어떻게 적용할 것인가?)
+- 그래서 직접 구현하기로 했다~
+
+```python
+from django.db import models
+from api.models.base_model import BaseModel
+from datetime import datetime
+
+
+class Subject(BaseModel):
+    subject_name = models.CharField(max_length=255)
+    professor_name = models.CharField(max_length=255)
+    contact = models.CharField(max_length=255)
+    location_info = models.CharField(max_length=255, blank=True)
+    time = models.TextField(blank=True)
+
+    is_cyber = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.subject_name
+
+    # implement safe delete
+    def delete(self, using=None, keep_parents=False):
+        self.deleted_at = datetime.now()
+        self.save()     
+```
+- 이렇게 해두니 deleted_at이 잘 작동한다.
+- 그럼 이제 list를 불러올 때 deleted_at이 널인 것들만 불러오면 되겠다.
+
+```python
+    @staticmethod
+    def get(request):
+        # get objects which are not deleted
+        subjects = Subject.objects.filter(deleted_at__isnull=True)
+        filtered_subjects = SubjectFilter(request.GET, queryset=subjects)
+        serializer = SubjectSerializer(filtered_subjects.qs, many=True)
+        return Response(serializer.data)
+```
+- 짜잔
+- 모두 잘 동작하는것을 확인하였다.
+
+### 자 그럼 이제 라이브러리를 삭제해야한다.
+
+- `pip uninstall django-safedelete` 를 통해 삭제하였다. (설마 이것도 safe delete 되나)
+- INSTALLED_APPS에서도 safedelete를 삭제했다.
+
+## 피드백 반영 후 느낀점
+- CBV방식이 구현하기 더 어렵다
+- 하지만 해냈다
+- 페이지네이션도 구현해두면 좋겠다. (나중에)
+- 끝~

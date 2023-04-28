@@ -1,5 +1,5 @@
 from subject.models import Subject
-from post.serializers import SubjectSerializer
+from subject.serializers import SubjectSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 

@@ -1,2 +1,3 @@
-from .subject_serializer import SubjectSerializer
-from .subject_review_serializer import SubjectReviewSerializer
+from .category_serializer import CategorySerializer
+from .post_serializer import PostSerializer
+from .comment_serializer import CommentSerializer

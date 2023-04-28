@@ -1,10 +1,9 @@
 from django.db import models
-from safedelete.models import SafeDeleteModel
-from safedelete.models import SOFT_DELETE_CASCADE
+from api.models.base_model import BaseModel
+from datetime import datetime
 
 
-class Subject(SafeDeleteModel):
-    _safedelete_policy = SOFT_DELETE_CASCADE
+class Subject(BaseModel):
     subject_name = models.CharField(max_length=255)
     professor_name = models.CharField(max_length=255)
     contact = models.CharField(max_length=255)
@@ -16,4 +15,7 @@ class Subject(SafeDeleteModel):
     def __str__(self):
         return self.subject_name
 
-
+    # implement safe delete
+    def delete(self, using=None, keep_parents=False):
+        self.deleted_at = datetime.now()
+        self.save()

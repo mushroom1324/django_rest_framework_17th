@@ -1,5 +1,5 @@
 from post.models import Post
-from post.models.serializers import PostSerializer
+from post.serializers import PostSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 

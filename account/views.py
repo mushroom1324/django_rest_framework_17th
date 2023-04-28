@@ -1,5 +1,5 @@
 from account.models import User
-from account.models.serializers import UserSerializer
+from account.serializers import UserSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 

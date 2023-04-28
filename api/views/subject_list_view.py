@@ -1,6 +1,6 @@
 from rest_framework.response import Response
 from subject.models import Subject
-from post.serializers import SubjectSerializer
+from subject.serializers import SubjectSerializer
 from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
 from .subject_filter_view import SubjectFilter
@@ -15,7 +15,8 @@ class SubjectListViewSet(APIView):
 
     @staticmethod
     def get(request):
-        subjects = Subject.objects.all()
+        # get objects which are not deleted
+        subjects = Subject.objects.filter(deleted_at__isnull=True)
         filtered_subjects = SubjectFilter(request.GET, queryset=subjects)
         serializer = SubjectSerializer(filtered_subjects.qs, many=True)
         return Response(serializer.data)
