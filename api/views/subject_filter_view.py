@@ -11,5 +11,6 @@ class SubjectFilter(FilterSet):
         model = Subject
         fields = ['subject_name', 'professor_name', 'is_cyber']
 
-    def is_cyber_filter(self, queryset, name, value):
+    @staticmethod
+    def is_cyber_filter(queryset, name, value):
         return queryset.filter(is_cyber=value)

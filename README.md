@@ -443,20 +443,21 @@ class SubjectFilter(FilterSet):
     - **subject_filter_view.py**
 
 api/views/subject_view.py
+
 ```python
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.viewsets import ModelViewSet
 from subject.models import Subject
-from subject.models.serializers import SubjectSerializer
+from post.serializers import SubjectSerializer
 from .subject_filter_view import SubjectFilter
 
 
 class SubjectViewSet(ModelViewSet):
-    queryset = Subject.objects.all()
-    serializer_class = SubjectSerializer
-    filter_backends = [DjangoFilterBackend]
-    filterset_class = SubjectFilter
-    
+  queryset = Subject.objects.all()
+  serializer_class = SubjectSerializer
+  filter_backends = [DjangoFilterBackend]
+  filterset_class = SubjectFilter
+
 ```
 - subject_list_view.py에 있던 `SubjectViewSet`을 subject_view.py로 옮겼다.
 - SubjectViewSet에 filterset_class에 `SubjectFilter`를 넣어주었다.
@@ -508,12 +509,15 @@ class SubjectFilter(FilterSet):
 - 사진은 없지만 DRF에서 POST도 잘 동작하는걸 확인했다.
 
 ### method로 필터링 커스텀
-- method를 이용하면 좀 더 특별한 필터링이 가능할 것 같다. (ex: 일정 좋아요 수를 넘는 댓글 display)
+- method를 이용하면 좀 더 특별한 필터링이 가능할 것 같다. (ex: 핫게 필터 뭐 이런..)
 
 
 # 후기
 - 생각보다 할 게 많았다. 
 - 모든 기능들에 대한 view, filter를 구현할 수 있겠지만.. 시간상.. 하지 못했다.
+- 솔직히 전부 뭐 패키지 분리 안하고 한꺼번에 박아뒀으면 금방 했을 것 같다.
+- 그래도 뭐.. 하고 보니 깔끔해뵈긴 하다 ㅎㅎ
+
 ### DRF with Browser
 - 솔직히 PostMan을 써온 사람으로서, 처음엔 DRF 브라우저 기능에 대한 반감이 있었다. (PostMan과의 의리)
 - 근데 DRF 브라우저 기능이 너무 편하다.
@@ -522,3 +526,100 @@ class SubjectFilter(FilterSet):
 - 그럼 이제 '최소한의 장고'에 대해 이해한 것 같다.
 - 걱정이 된다. 배포 과제 잘 마칠 수 있을까..?
 <img width="707" alt="Screen Shot 2023-04-07 at 7 53 05 PM" src="https://user-images.githubusercontent.com/76674422/230596998-16e435e1-3360-4864-9c93-1b636298ea3a.png">
+
+# 피드백 반영하기
+> 피드백 주셔서 감사합니다.. 이제 시험도 끝났겠다 수정하겠습니다
+
+#### _현재는 deleted_at과 is_deleted가 둘다 보이는데, deleted_at 값이 null이 아니라면 delete된 것으로 판단할 수 있기 때문에 둘 중 하나만 이용하셔도 soft delete를 구현하실 수 있습니다!_
+
+- 그래서.. is_deleted를 삭제했습니다.
+
+**base_model.py**
+```python
+class BaseModel(models.Model):
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    deleted_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        abstract = True
+
+    def delete(self, using=None, keep_parents=False):
+        self.is_deleted = True
+        self.deleted_at = datetime.now()
+        self.save()
+```
+- 감사합니다.
+
+## _이 방식은 CBV가 아니라 FBV 아닌가요?_
+- 헉
+### FBV (Function-Base Views)
+- FBV는 함수 기반의 뷰이다.
+- 장점: 
+  - 구현의 단순함
+- 단점: 
+  - 재사용성이 떨어짐
+  - 조건문으로 HTTP 메소드를 구분
+
+### CBV (Class-Base Views)
+- CBV는 클래스 기반의 뷰이다.
+- 장점: 
+  - HTTP 메소드에 대한 처리를 조건문이 아닌 메소드 명으로 구분하여 코드가 깔끔
+  - 제너릭 뷰, 믹스인 클래스 등을 사용해 코드의 재사용성, 개발 생산성을 높여줌
+
+<br>
+api/의 view는 CBV로 되어있지만 APIView는 쓰지 않았다
+다른 앱들의 view는 FBV로 되어있다. 
+그래서 CBV - APIView로 통일하였다.
+
+```python
+class UserList(APIView):
+
+    @staticmethod
+    def get(request):
+        users = User.objects.all()
+        serializer = UserSerializer(users, many=True)
+        return Response(serializer.data)
+
+    @staticmethod
+    def post(request):
+
+        serializer = UserSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=201)
+
+        return Response(serializer.errors, status=400)
+```
+- 감사합니다.
+- 잘 작동하는데, DRF 페이지에 있던 Filter 버튼이 없어졌다..
+- 뭐.. 그래도 잘 작동하는 것 같다.
+
+
+
+### _지금 api가 'post/posts/' 이런 식인 것 같은데 restful한 api를 설계하기 위해서 컨벤션을 잘 지키면 좋을 것 같아요!!_
+
+- 현재 api/subjects/ 로 접근하여 HTTP요청을 할 수 있습니다!
+- 하지만 subject, post app 내의 urls.py를 보면 post/post 이런식으로 되어있습니다.
+- 프로젝트의 urls.py를 보면 다음과 같이 고칩니다.
+
+```python
+urlpatterns = [
+    path('accounts/', include('account.urls')),
+    path('posts/', include('post.urls')),
+    path('subjects/', include('subject.urls')),
+    path('api/', include('api.urls')),
+    path('admin/', admin.site.urls),
+]
+```
+
+- 그리고 각각의 app의 url을 다음과 같이 고칩니다.
+post/urls.py
+```python
+urlpatterns = [
+    path('', views.PostList.as_view()),
+]
+```
+- 이제 `http://localhost:8080/posts/` 로 접근할 수 있습니다.
+- 감사합니다.

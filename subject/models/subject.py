@@ -1,7 +1,10 @@
 from django.db import models
+from safedelete.models import SafeDeleteModel
+from safedelete.models import SOFT_DELETE_CASCADE
 
 
-class Subject(models.Model):
+class Subject(SafeDeleteModel):
+    _safedelete_policy = SOFT_DELETE_CASCADE
     subject_name = models.CharField(max_length=255)
     professor_name = models.CharField(max_length=255)
     contact = models.CharField(max_length=255)

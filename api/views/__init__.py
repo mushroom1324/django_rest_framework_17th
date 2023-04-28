@@ -1,2 +1,3 @@
-from .subject_list_view import subject_list
-from .subject_detail_view import subject_detail
+from .subject_list_view import SubjectListViewSet
+from .subject_detail_view import SubjectDetailViewSet
+from .subject_filter_view import SubjectFilter

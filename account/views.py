@@ -1,26 +1,24 @@
-from django.shortcuts import render
-from django.http import HttpResponse, JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from rest_framework.parsers import JSONParser
 from account.models import User
 from account.models.serializers import UserSerializer
+from rest_framework.views import APIView
+from rest_framework.response import Response
 
 
-# Create your views here.
-@csrf_exempt
-def user_list(request):
-    """
-    List all code users, or create a new user.
-    """
-    if request.method == 'GET':
+# Create your views here, using CBV
+class UserList(APIView):
+
+    @staticmethod
+    def get(request):
         users = User.objects.all()
         serializer = UserSerializer(users, many=True)
-        return JsonResponse(serializer.data, safe=False)
+        return Response(serializer.data)
 
-    elif request.method == 'POST':
-        data = JSONParser().parse(request)
-        serializer = UserSerializer(data=data)
+    @staticmethod
+    def post(request):
+
+        serializer = UserSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return JsonResponse(serializer.data, status=201)
-        return JsonResponse(serializer.errors, status=400)
+            return Response(serializer.data, status=201)
+
+        return Response(serializer.errors, status=400)
