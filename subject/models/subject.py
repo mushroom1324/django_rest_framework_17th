@@ -14,8 +14,3 @@ class Subject(BaseModel):
 
     def __str__(self):
         return self.subject_name
-
-    # implement safe delete
-    def delete(self, using=None, keep_parents=False):
-        self.deleted_at = datetime.now()
-        self.save()

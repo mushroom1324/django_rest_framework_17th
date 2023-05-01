@@ -546,7 +546,6 @@ class BaseModel(models.Model):
         abstract = True
 
     def delete(self, using=None, keep_parents=False):
-        self.is_deleted = True
         self.deleted_at = datetime.now()
         self.save()
 ```
@@ -696,6 +695,25 @@ class Subject(BaseModel):
 ```
 - 짜잔
 - 모두 잘 동작하는것을 확인하였다.
+
+- 가 아니고! 바보같은 실수를 했는데
+- BaseModel에 delete 메소드 잘 구현해놓고 상속하는 Subject에 또 delete 메소드를 구현했다 ..
+- 이러면 어떻게 될까?
+- 그렇다. 상속하는 Subject 모델의 delete에 우선권이 주어진다.(오버라이딩)
+- 하지만 아무것도 확장하지 안하는 단순 중복 코드는 필요없으므로 삭제했다.
+```python
+class Subject(BaseModel):
+    subject_name = models.CharField(max_length=255)
+    professor_name = models.CharField(max_length=255)
+    contact = models.CharField(max_length=255)
+    location_info = models.CharField(max_length=255, blank=True)
+    time = models.TextField(blank=True)
+
+    is_cyber = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.subject_name
+```
 
 ### 자 그럼 이제 라이브러리를 삭제해야한다.
 
