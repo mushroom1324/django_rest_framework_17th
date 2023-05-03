@@ -4,6 +4,9 @@ from subject.serializers import SubjectSerializer
 from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
 from .subject_filter_view import SubjectFilter
+from rest_framework.decorators import permission_classes, authentication_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 
 
 class SubjectListViewSet(APIView):
@@ -14,6 +17,8 @@ class SubjectListViewSet(APIView):
     filterset_class = SubjectFilter
 
     @staticmethod
+    @permission_classes([IsAuthenticated])
+    @authentication_classes([JSONWebTokenAuthentication])
     def get(request):
         # get objects which are not deleted
         subjects = Subject.objects.filter(deleted_at__isnull=True)
