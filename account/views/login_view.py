@@ -10,9 +10,6 @@ class LoginAPIView(APIView):
 
     @staticmethod
     def post(request):
-        print(authenticate(
-            email=request.data.get("email"), password=request.data.get("password")
-        ))
         user = authenticate(
             email=request.data.get("email"), password=request.data.get("password")
         )
@@ -32,6 +29,8 @@ class LoginAPIView(APIView):
                 },
                 status=status.HTTP_200_OK,
             )
+            res.set_cookie("access", access_token, httponly=True)
+            res.set_cookie("refresh", refresh_token, httponly=True)
             return res
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST)

@@ -947,17 +947,69 @@ api/views/subject_list_view.py
 <img width="1033" alt="image" src="https://user-images.githubusercontent.com/76674422/235608752-d7fe8f5e-3cce-451c-b9a5-2d3e7fea389a.png">
 
 - refresh가 잘 되는 모습입니다.
-- 난 무엇이든 해내
-
-
-## 로그아웃
-
-- 로그아웃도 해보겠습니다.
-
-#### 해야 할 것
-- 클라이언트가 가지고 있던 access token 삭제
-- 서버 쿠키에 있는 refresh token 삭제
 
 # 다시
 - 아 Simple JWT를 써야겠다고 판단하고 다 지우고 다시 합니다..
-- 
+- 왜 다시했나요: 할 말이 많습니다.. 결론적으로 Simple JWT가 구현에 더 유리하다고 판단하여 처음부터 다시 시작했습니다.
+- django rest framework JWT 쓰니까 superuser만 잘 작동하고 일반 유저 접근이 잘 안되더라구요..
+- 물론 가능하겠지만 전 실패했습니다.
+- 아무튼 화나서 다 버리고 다시 했습니다.
+- 화가 너무 나서 커밋 메세지도 '다시' 로 했습니다..
+- 설정 방법은 비슷하고, 여러 시행착오 끝에 서버에 회원가입/로그인 한 유저에게 토큰을 줄 수 있었습니다
+
+![image](https://user-images.githubusercontent.com/76674422/236623964-052b5b38-2860-4b11-9adc-8f2a753e2eec.png)
+
+- 이론 쪽에서 말씀드렸듯이 로그인 시 엑세스 토큰과 리프레시 토큰을 줍니다.
+
+![image](https://user-images.githubusercontent.com/76674422/236624085-e1e01228-b96a-4184-9708-413b70d11c58.png)
+
+- 회원가입/로그인 시 받은 리프레시 토큰으로 리프레시 url에 접근하면 저렇게 엑세스 토큰을 재발급해줍니다.
+
+- 리프레시 토큰 발급은 simple jwt의 내장 기능을 이용했습니다. (사실 토큰 발급도 내장 기능을 이용한거죠..)
+
+
+```python
+
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from account.serializers import UserSerializer
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from django.contrib.auth import authenticate
+
+
+class LoginAPIView(APIView):
+    @staticmethod
+    def post(request):
+        user = authenticate(
+            email=request.data.get("email"), password=request.data.get("password")
+        )
+        if user is not None:
+            serializer = UserSerializer(user)
+            token = TokenObtainPairSerializer.get_token(user)
+            refresh_token = str(token)
+            access_token = str(token.access_token)
+            res = Response(
+                {
+                    "user": serializer.data,
+                    "message": "login success",
+                    "token": {
+                        "access": access_token,
+                        "refresh": refresh_token,
+                    },
+                },
+                status=status.HTTP_200_OK,
+            )
+            return res
+        else:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+```
+
+- authenticate()는 유저 정보(email, password)를 받아서 유저가 valid한지 체크해줍니다.
+- valid하면 (not None) 토큰을 갖다줍니다.
+- 그렇지 않으면 400 에러를 던집니다.
+
+# 로그아웃?
+- 토큰이 만료되면 로그아웃됩니다.
+- 만료되기 전에 로그아웃하고 싶다면, 토큰을 블랙리스트에 추가하면 됩니다.
+
