@@ -68,7 +68,6 @@ class User(AbstractBaseUser, PermissionsMixin):
         max_length=30,
         blank=True
     )
-    friend_list = models.ManyToManyField('self', blank=True)
     profile_image = models.ImageField(
         verbose_name=_('Profile image'),
         upload_to='profile_image',

@@ -958,3 +958,6 @@ api/views/subject_list_view.py
 - 클라이언트가 가지고 있던 access token 삭제
 - 서버 쿠키에 있는 refresh token 삭제
 
+# 다시
+- 아 Simple JWT를 써야겠다고 판단하고 다 지우고 다시 합니다..
+- 
