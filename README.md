@@ -1013,3 +1013,59 @@ class LoginAPIView(APIView):
 - 토큰이 만료되면 로그아웃됩니다.
 - 만료되기 전에 로그아웃하고 싶다면, 토큰을 블랙리스트에 추가하면 됩니다.
 
+`'rest_framework_simplejwt.token_blacklist',` 를 settings.py에 추가해줍니다.
+
+```python
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.permissions import IsAuthenticated
+
+
+class LogoutAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    @staticmethod
+    def post(request):
+        try:
+            refresh_token = request.COOKIES.get("refresh")
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+            return Response(status=status.HTTP_205_RESET_CONTENT)
+        except Exception as e:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+```
+- 저렇게 블랙리스트에 토큰을 추가해주면 됩니다.
+
+![image](https://user-images.githubusercontent.com/76674422/236626013-85d0047f-de2b-40ef-a14c-ea2794bb6573.png)
+
+- 짜잔
+
+# 권한 설정
+- 위에서 스포를 살짝 했습니다.
+- 그렇습니다. `permission_classes = (IsAuthenticated,)` 로 권한 설정을 하면 됩니다.
+- 이렇게 하면 로그인한 유저만 접근할 수 있습니다.
+- 해당 url에 접근하려면 헤더에 Authorization : token을 담아서 보내야 합니다
+
+# 겪은 오류와 해결
+
+```python
+    # staticmethod면 self 빼야함
+    @staticmethod
+    def post(request):
+    
+    # staticmethod 안쓰면 self도 넣음 
+    def post(self, request):
+```
+- 일단 이게 저를 진짜 미치게 했습니다.
+- 저기 아래처럼 post에 staticmethod 안써두면 노란 밑줄 생기면서 staticmethod로 쓰라고 하거든요?
+- 근데 그거 쓰면 self를 뺴야합니다. 안그러면 request를 못받았다고 post가 안됩니다..
+- 제가 예전에 postman 쓰다가 post 메서드를 잘못 건드린 적 있어서 postman 문젠가? 싶어가지고 막 재설치 하고 죄없는 DB 갈아엎고 난리도 아니었습니다
+- 결국 저거 하나 문제였네요. (에러메세지도 너무 포괄적 메세지라 구글링도 안되고 .. . ...)
+- 사실 이거 많고도 문제가 많았는데요, 너무 많아서 기억이 나질 않습니다
+
+# 후기
+- django rest framework JWT 때문에 너무 화가 났습니다.
+- 어쨌든.. 해냈습니다
+- Simple JWT 화이팅입니다.
