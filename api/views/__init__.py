@@ -1,3 +1,0 @@
-from .subject_list_view import SubjectListViewSet
-from .subject_detail_view import SubjectDetailViewSet
-from .subject_filter_view import SubjectFilter

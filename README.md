@@ -69,6 +69,7 @@ updated_at = models.DateTimeField(auto_now=True)
 
 ### comment.py, reply.py
 - 딱히 뭐 없고, __str__을 작성할 때 고민을 했다.
+- 
 - 댓글에 제목같은건 안달고싶고.. 그렇다고 유저이름 띄우긴 싫고..
 - 그래서 달린 게시글 이름이랑 내용 10자만 받기로 했다.
 
@@ -725,3 +726,235 @@ class Subject(BaseModel):
 - 하지만 해냈다
 - 페이지네이션도 구현해두면 좋겠다. (나중에)
 - 끝~
+
+
+
+
+
+
+# 4주차 미션
+
+로그인 구현하기
+
+# 이론
+
+- 세션 방식과 토큰 방식이 있습니다.
+- 저희에게 중요한 것은 보안성과 효율성이므로 두개의 측면에서 바라보겠습니다.
+
+## 세션
+
+- 세션 정보를 쿠키에 담아 소통하고, 인증 정보를 서버에 둡니다.
+- 서버에 저장되는 세션 정보는 서버 메모리에 저장되거나, DB에 저장됩니다.
+- 사실 세션의 경우 쿠키 헤더에 ID만 담아서 보내면 되므로 트래픽을 적게 먹습니다. (효율 좋음)
+- 세션 ID가 탈취당해도 서버측에서 세션을 무효처리 하면 됩니다. (보안성 좋음)
+
+#### 왜 안씀?
+
+- 확장성이 문제입니다..
+- 세션은 Stateful 합니다. (서버에 저장되어야 하므로)
+- 서버가 여러대라면 세션을 공유해야겠죠? (DB를 공유하거나, Redis를 사용하거나)
+- 이러면 서버가 늘어날수록 세션을 공유해야하는 부담이 생깁니다.
+- 저희가 장난삼아 만드는 사이트엔 세션도 부담이 없겠지만, 서버 규모가 커질수록 이러한 세션방식의 한계가 생길겁니다.
+- Stateless한 토큰 방식을 사용합시다. (JWT)
+
+## 토큰
+
+- 위에서 말했듯 Stateless합니다.
+- 토큰은 인증 정보를 클라이언트에게 줍니다.
+
+#### Access Token
+
+- 클라이언트가 ID/PW를 넘겨주면 서버는 Access Token을 반환해줍니다.
+- 이 토큰은 전자서명이 되어있습니다. (토큰의 훼손 방지)
+- Access Token 자체가 인증 정보이기 때문에, Stateless 합니다.
+- 하지만 토큰을 탈취당한다면, 토큰이 만료될 때까지 탈취한 사람이 인증을 할 수 있습니다.
+- 그렇기 때문에 Access Token은 만료시간을 짧게 가져가야합니다.
+- 그치만 만료시간이 짧으면 만료될때마다 로그인을 해줘야겠죠?
+- 그래서 Refresh Token이 등장합니다.
+
+#### Refresh Token
+
+- 클라이언트가 로그인 시 Access Token을 넘겨주면서 Refresh Token도 같이 줍니다.
+- 서버는 DB에 Refresh Token을 저장합니다.
+- 클라이언트는 Access Token 만료 시 받아뒀던 Refresh Token을 이용해 Access Token 재발급을 요청합니다.
+- 서버는 DB에 저장된 Refresh Token과 클라이언트가 보낸 Refresh Token을 비교하고 일치하면 Access Token을 재발급합니다.
+- 물론 Refresh Token도 탈취 가능성이 있지만 만료시간이 길기 때문에 Access Token보다는 안전합니다.
+
+
+# 실습
+
+
+## django rest framework JWT 설치
+
+> pip install djangorestframework djangorestframework-jwt
+
+> pip freeze > requirements.txt
+
+## settings.py에 추가
+```python
+REST_FRAMEWORK = {
+    'DEFAULT_FILTER_BACKENDS': (
+        'django_filters.rest_framework.DjangoFilterBackend'
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+    ),
+}
+
+JWT_AUTH = {
+    'JWT_SECRET_KEY': env('JWT_SECRET_KEY'),
+    'JWT_ALGORITHM': 'HS256',
+    'JWT_ALLOW_REFRESH': True,
+    'JWT_EXPIRATION_DELTA': datetime.timedelta(days=7),
+    'JWT_REFRESH_EXPIRATION_DELTA': datetime.timedelta(days=28),
+}
+```
+간략한 설명..
+
+`DEFAULT_PERMISSION_CLASSES`
+- `rest_framework.permissions.IsAuthenticated` 로 로그인 판별
+
+`DEFAULT_AUTHENTICATION_CLASSES`
+- `rest_framework_jwt.authentication.JSONWebTokenAuthentication` 즉 JWT 사용하겠다고 선언
+
+`JWT_SECRET_KEY`
+- 암호화시 사용하는 비밀 키로, .env에 저장하는게 좋아보입니다.
+
+`JWT_ALGORITHM`
+- "JWT 암호화에 어떤 알고리즘을 사용할거냐" 입니다. HS256 사용하겠습니다.
+
+`JWT_ALLOW_REFRESH`
+- 리프레쉬 토큰 쓸거니까 True로 둘게요.
+
+`JWT_EXPIRATION_DELTA`
+- 토큰의 유효기간입니다. 갱신하지 않을 시 토큰은 7일 후 만료됩니다. 
+- 왜 7일이냐: 솔직히 구글링하면서 따라한거라.. 하란대로 7일 넣었습니다. 다들 그렇게 했잖아요.
+
+`JWT_REFRESH_EXPIRATION_DELTA`
+- 토큰 갱신의 유효기간입니다. 토큰은 최대 28일까지 갱신 후 무조건 만료됩니다.
+
+## URL 설정
+<img width="772" alt="image" src="https://user-images.githubusercontent.com/76674422/235585719-d94becc9-8332-49e1-9074-98b1926cdc79.png">
+<div>제가 본 블로그인데요.. url을 저렇게 configure 해놨더라구요.</div>
+<div>저는 이미 api 앱이 있으니, api 앱 안에 넣겠습니다.</div>
+
+api/urls.py
+```python
+from django.urls import path
+from api import views
+from rest_framework_jwt.views import obtain_jwt_token, verify_jwt_token, refresh_jwt_token
+
+urlpatterns = [
+    path('subjects/', views.SubjectListViewSet.as_view()),
+    path('subjects/<int:pk>/', views.SubjectDetailViewSet.as_view()),
+    path('login/', obtain_jwt_token),
+    path('login/verify/', verify_jwt_token),
+    path('login/refresh/', refresh_jwt_token),
+]
+```
+`obtain_jwt_token`
+- 발행
+
+`verify_jwt_token`
+- 검증
+
+`refresh_jwt_token`
+- 갱신
+
+## Views 설정
+<div>만들어둔게 subject 모델 관련이니, _과목들을 보려면 서버가 인가해주어야 한다_ 라고 가정할게요.</div>
+<div>제가 본 블로그 페이지는 FBV를 썼더라구요. 눈치껐 했습니다.</div>
+
+api/views/subject_list_view.py
+```python
+    @staticmethod
+    @api_view(['GET']) # 지웠음
+    @permission_classes([IsAuthenticated])
+    @authentication_classes([JSONWebTokenAuthentication])
+    def get(request):
+        # get objects which are not deleted
+        subjects = Subject.objects.filter(deleted_at__isnull=True)
+        filtered_subjects = SubjectFilter(request.GET, queryset=subjects)
+        serializer = SubjectSerializer(filtered_subjects.qs, many=True)
+        return Response(serializer.data)
+```
+<div>데코레이터 3개가 추가됐습니다.</div>
+
+`@api_view(['GET'])`
+- GET 요청만 받겠다고 선언하는건데 이미 잘만 쓰던건데 굳이 싶어서.. 뺐습니다.
+
+`@permission_classes([IsAuthenticated])`
+- 권한을 체크하는 곳입니다.
+
+`@authentication_classes([JSONWebTokenAuthentication])`
+- JWT 토큰을 확인합니다. 토큰에 이상이 있으면 에러를 JSON으로 던집니다.
+
+<div>근데 이상하죠.. 말만 들으면 permission_classes나 authentication_classes나 둘다 권한체크입니다..</div>
+<div>권한 체크하려면 당연히 JWT 토큰을 확인해야 하는 것 아닐까요</div>
+
+<div>그래서 Stack Overflow에서 괜찮은 답변을 찾았습니다..</div>
+
+>After removing TokenAuthentication class you are able to access the api because then drf is using session authentication and browser handles the sessions for you. When you use TokenAuthentication then you need to add token in header of request which is not done by browser. thats why you are getting { "detail": "Authentication credentials were not provided." }. try this api from postman by adding the token in headers then it will work.
+
+- `@authentication_classes([JSONWebTokenAuthentication])` 이 없다면 DRF는 세션 인증을 사용합니다.
+- 제가 `@authentication_classes([JSONWebTokenAuthentication])`를 없애보겠습니다.
+<img width="772" alt="image" src="https://user-images.githubusercontent.com/76674422/235589879-de7737fe-f829-473f-abcf-f7ac1886a57f.png">
+- ?
+- 계획대로면 JWT 얘기가 없고 세션 얘기가 나와야 하는데 그쵸
+- 아니 뭐 해보는김에 원복 후 `@permission_classes([IsAuthenticated])` 를 빼고 해봤습니다.
+
+<img width="772" alt="image" src="https://user-images.githubusercontent.com/76674422/235590484-85f0e56a-958b-4ae5-b6b4-906b9985627d.png">
+
+- ??
+- 진짜 뭐 둘이 역할이 똑같나요?
+- 그럼.. 그럼 둘 다 빼보겠습니다.
+
+<img width="772" alt="image" src="https://user-images.githubusercontent.com/76674422/235591152-c1e79232-662a-4e0a-8f1e-3d546e9db4b7.png">
+
+- ㅋㅋㅋㅋㅋ
+- 아 이게 왜 이런가 했더니 default값이 settings.py에 있는 값을 따르기 때문이라고 하네요..
+- 바보가 된 기분이었습니다. 역시 스택 오버플로우 형님들은 거짓말을 하지 않습니다.
+
+
+### 유용한 정보
+- `@permission_classes` 는 HTTP 403 에러를 던집니다.
+- `@authentication_classes` 는 HTTP 401 에러를 던집니다.
+- settings.py에 있는 `'rest_framework_jwt.authentication.JSONWebTokenAuthentication'`을 주석처리하면 DRF가 세션 로그인 방식으로 감지하고 **403** 에러를 던집니다.
+- 왜냐면 `@authentication_classes`가 세션 로그인 방식으로 감지하기 때문에 **헤더의 JWT토큰을 찾지 않고** 그냥 넘기기 때문입니다.
+- 그러면 `@permission_classes`가 로그인이 되어있지 않은걸 확인하고 에러를 던지기 때문에 그렇습니다.
+- 이제 각각이 다른 놈인걸 인지했죠?
+- 자 그럼 좀 더 세밀하게 테스트합시다.
+
+### 테스트 via Postman
+<img width="1033" alt="image" src="https://user-images.githubusercontent.com/76674422/235593673-8daef165-aff2-4793-9440-9c84513f1afb.png">
+
+- 로그인 하니까 토큰 잘 주죠
+- 아까 말했듯이, 이 토큰을 헤더에 담아서 쓰면 7일동안 잘 쓸 수 있다는거죠.
+
+<img width="1033" alt="image" src="https://user-images.githubusercontent.com/76674422/235596351-a54eb286-c577-4e4d-b99b-69edb11a50bd.png">
+
+- 방금 받은 토큰을 헤더에 담아서 subject get 요청을 하니 잘 줍니다.
+
+<img width="1033" alt="image" src="https://user-images.githubusercontent.com/76674422/235608611-3cb84569-483b-434a-b7e6-fce3d5f10d88.png">
+
+- verify가 잘 되는 모습입니다.
+
+<img width="1033" alt="image" src="https://user-images.githubusercontent.com/76674422/235608752-d7fe8f5e-3cce-451c-b9a5-2d3e7fea389a.png">
+
+- refresh가 잘 되는 모습입니다.
+- 난 무엇이든 해내
+
+
+## 로그아웃
+
+- 로그아웃도 해보겠습니다.
+
+#### 해야 할 것
+- 클라이언트가 가지고 있던 access token 삭제
+- 서버 쿠키에 있는 refresh token 삭제
+

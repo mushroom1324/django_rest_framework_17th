@@ -15,4 +15,4 @@ COPY requirements.txt /app/requirements.txt
 RUN pip install -r requirements.txt
 
 # Now copy in our code, and run it
-COPY . /app/
+COPY ../../Downloads/django_rest_framework_17th-master /app/
