@@ -1,5 +1,6 @@
 from django.db import models
 from api.models.base_model import BaseModel
+from datetime import datetime
 
 
 class Subject(BaseModel):
