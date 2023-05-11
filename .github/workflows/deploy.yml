@@ -16,8 +16,8 @@ jobs:
 
     - name: create env file
       run: |
-        touch .env
-        echo "${{ secrets.ENV_VARS }}" >> .env
+        touch .env.prod
+        echo "${{ secrets.ENV_VARS }}" >> .env.prod
 
     - name: create remote directory
       uses: appleboy/ssh-action@master
