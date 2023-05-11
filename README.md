@@ -146,12 +146,16 @@ $ pip uninstall cffi
 $ LDFLAGS=-L$(brew --prefix libffi)/lib CFLAGS=-I$(brew --prefix libffi)/include pip install cffi --no-binary :all:
 $ LDFLAGS="-L$(brew --prefix openssl@1.1)/lib" CFLAGS="-I$(brew --prefix openssl@1.1)/include" pip install cryptography
 ```
+- 안써도 되는 것 같아서 다시 지웠다.
 - pymysql안쓰고 mysqlclient로 바꿨다.
-- 그 외 많진 않고 오류 한 2억개정도? 고쳤다.
+  - mysql.config파일이 실종되어서 mysqlclient 패키지를 깔 수 없는 오류가 자꾸 생겼다..
+  - mysql@5.7을 깔고 pip3 install mysqlclient를 해서 해결하긴 했다
+  - 그 사이 수많은 방법을 시도해서 뭐가 정확한 방법인진 모르겠다.
+- 그 외 많진 않고 오류 뭐 한 2억개정도? 고쳤다.
 
 <img width="1005" alt="image" src="https://github.com/CEOS-Developers/django_rest_framework_17th/assets/76674422/b9233872-fbf7-40d0-abfa-2affcdc8cf4e">
 
-- 드디어 돌아가는 모습
+- 도커에서 돌아가는 모습
 
 <img width="1011" alt="image" src="https://github.com/CEOS-Developers/django_rest_framework_17th/assets/76674422/5151d326-bac0-4021-a7a1-ba6fb6fdee37">
 
