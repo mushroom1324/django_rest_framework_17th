@@ -44,3 +44,9 @@ jobs:
         key: ${{ secrets.KEY }}
         script: |
           sh /home/ubuntu/srv/ubuntu/config/scripts/deploy.sh
+
+    - name: install Pillow
+      uses: appleboy/ssh-action@master
+      run: |
+        sudo apt-get install libjpeg-dev zlib1g-dev
+        pip3 install Pillow

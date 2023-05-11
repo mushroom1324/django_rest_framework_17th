@@ -172,7 +172,26 @@ $ LDFLAGS="-L$(brew --prefix openssl@1.1)/lib" CFLAGS="-I$(brew --prefix openssl
 - dev branch에서 Action을 취하도록 설정되어있다.
 - master도 추가했는데 그냥 dev 브랜치를 따로 파는게 좋을 것 같아서 다시 삭제했다.
 
-- 깃헙 액션 에러가 발생했다.
-> err: Couldn't find env file: /home/ubuntu/srv/ubuntu/.env.prod
+- 깃헙 액션 에러:
+
+#### err: Couldn't find env file: /home/ubuntu/srv/ubuntu/.env.prod
 
 - .env.prod 파일이 없다고 한다.
+
+``` yml
+      run: |
+        touch .env.prod
+        echo "${{ secrets.ENV_VARS }}" >> .env.prod
+```
+- 깃헙 액션의 `deploy.yml` 을 다음과 같이 수정했다.
+
+#### ERROR: Failed building wheel for Pillow
+
+- 너네 에러나고 싶은 거 있으면 얼마든지 해 난 괜찮어
+
+``` yml
+      run: |
+        sudo apt-get install libjpeg-dev zlib1g-dev
+        pip3 install Pillow
+```
+- 다음의 코드를 `deploy.yml`에 추가했다.
