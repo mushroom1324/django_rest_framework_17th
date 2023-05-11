@@ -162,3 +162,17 @@ $ LDFLAGS="-L$(brew --prefix openssl@1.1)/lib" CFLAGS="-I$(brew --prefix openssl
 - 지난 과제에서 구현한 회원가입 및 로그인이 잘 작동한다.
 
 ## 실 환경 배포
+
+- AWS EC2, RDS 를 만들었다.
+- 돈 나갈까 무서웠지만 잘 한것 같다.
+
+## Github Action
+
+- Github Action을 사용해서 자동으로 배포되도록 설정했다.
+- dev branch에서 Action을 취하도록 설정되어있다.
+- master도 추가했는데 그냥 dev 브랜치를 따로 파는게 좋을 것 같아서 다시 삭제했다.
+
+- 깃헙 액션 에러가 발생했다.
+> err: Couldn't find env file: /home/ubuntu/srv/ubuntu/.env.prod
+
+- .env.prod 파일이 없다고 한다.
