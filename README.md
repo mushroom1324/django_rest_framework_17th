@@ -166,6 +166,14 @@ $ LDFLAGS="-L$(brew --prefix openssl@1.1)/lib" CFLAGS="-I$(brew --prefix openssl
 - AWS EC2, RDS 를 만들었다.
 - 돈 나갈까 무서웠지만 잘 한것 같다.
 
+## 흐름부터 알자
+
+- Github Action의 `deploy.yml`가 가장 먼저 실행된다.
+- 여러개 실행하다가 `config/scripts/deploy.sh`를 실행한다.
+  - (executing remote ssh commands using password)가 실행
+- `deploy.sh`는 `docker-compose.prod.yml`을 실행한다.
+- `docker-compose.prod.yml`은 `Dockerfile.prod`를 실행한다.
+
 ## Github Action
 
 - Github Action을 사용해서 자동으로 배포되도록 설정했다.
@@ -183,15 +191,13 @@ $ LDFLAGS="-L$(brew --prefix openssl@1.1)/lib" CFLAGS="-I$(brew --prefix openssl
         touch .env.prod
         echo "${{ secrets.ENV_VARS }}" >> .env.prod
 ```
-- 깃헙 액션의 `deploy.yml` 을 다음과 같이 수정했다.
+- 깃헙 액션의 `deploy.yml` 을 다음과 같이 수정하니 고쳐졌다. 유후
 
 #### ERROR: Failed building wheel for Pillow
 
 - 너네 에러나고 싶은 거 있으면 얼마든지 해 난 괜찮어
 
-``` yml
-      run: |
-        sudo apt-get install libjpeg-dev zlib1g-dev
-        pip3 install Pillow
+``` 
+RUN pip3 install --upgrade pip setuptools wheel
 ```
-- 다음의 코드를 `deploy.yml`에 추가했다.
+- `Dockerfile.prod`에 위 코드를 추가했다.

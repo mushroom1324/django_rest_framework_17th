@@ -46,10 +46,11 @@ RUN apk update && apk add libpq
 RUN apk update \
     && apk add --virtual build-deps gcc python3-dev musl-dev \
     && apk add --no-cache mariadb-dev
+RUN pip3 install --upgrade pip setuptools wheel
 COPY --from=builder /usr/src/app/wheels /wheels
 COPY --from=builder /usr/src/app/requirements.txt .
-RUN pip install mysqlclient
-RUN pip install --no-cache /wheels/*
+RUN pip3 install mysqlclient
+RUN pip3 install --no-cache /wheels/*
 RUN apk del build-deps
 
 # copy entrypoint-prod.sh
