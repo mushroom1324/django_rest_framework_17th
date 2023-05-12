@@ -9,6 +9,7 @@ services:
     command: gunicorn django_rest_framework_17th.wsgi:application --bind 0.0.0.0:8000
     environment:
       DJANGO_SETTINGS_MODULE: django_rest_framework_17th.settings.prod
+      TZ: "Asia/Seoul"
     env_file:
       - .env.prod
     volumes:

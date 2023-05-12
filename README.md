@@ -200,4 +200,28 @@ $ LDFLAGS="-L$(brew --prefix openssl@1.1)/lib" CFLAGS="-I$(brew --prefix openssl
 ``` 
 RUN pip3 install --upgrade pip setuptools wheel
 ```
-- `Dockerfile.prod`에 위 코드를 추가했다.
+- `Dockerfile.prod`에 위 코드를 추가했다. (requirements 깔기 전에 넣어야 한다.)
+
+#### ERROR: Pillow-9.5.0-cp38-cp38-musllinux_1_1_x86_64.whl is not a supported wheel on this platform.
+
+- 그래도 에러가 바뀌었다. ㅎㅎ
+- 단순한 Pillow 버전 충돌 문제이다.. 우분투에 맞는 Pillow를 찾는다.
+- 내 해결방법:  `deploy.sh`에 다음 코드를 추가한다:
+
+``` shell
+sudo apt-get install python3-dev python3-setuptools
+sudo apt-get install libtiff5-dev libjpeg8-dev libopenjp2-7-dev zlib1g-dev \
+    libfreetype6-dev liblcms2-dev libwebp-dev tcl8.6-dev tk8.6-dev python3-tk \
+    libharfbuzz-dev libfribidi-dev libxcb1-dev
+```
+- `Dockerfile.prod`에 다음 코드를 추가한다:
+```
+RUN python3 -m pip install --upgrade pip
+RUN python3 -m pip install --upgrade pillow
+```
+- 그다음 requirements.txt에 Pillow를 삭제한다. (이미 설치했으므로)
+
+![image](https://github.com/CEOS-Developers/django_rest_framework_17th/assets/76674422/10279b32-21bd-422d-8208-06e2a70aaee8)
+
+- 난 무엇이든 해내
+
