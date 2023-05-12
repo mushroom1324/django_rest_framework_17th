@@ -288,3 +288,16 @@ RUN python3 -m pip install --upgrade pillow
 - 디버깅의 난이도가 높았습니다. 문제의 원인을 찾는 일이 쉽진 않았습니다.
 - nginx나 docker compose나.. 여러가지 새로운 개념을 한꺼번에 다루어서 그랬던 것 같습니다.
 - 지금까지 한 과제 중 저에게 가장 유익한 과제였습니다. 감사합니다. 
+
+# 추가 : .env.prod에 관하여..
+
+- 과거 커밋에 `.env.prod`가 올라가버렸다 ^^.. .env 관련 파일이라 자동으로 gitignore 해줄 줄 알았다.. 방심했다 
+- 머지되어버려서 되돌리기도 애매하여 그냥 RDS를 다시 팠다.
+
+<img width="1073" alt="image" src="https://github.com/CEOS-Developers/django_rest_framework_17th/assets/76674422/750aeabd-f102-499a-a643-dac5ffbb1651">
+
+- 세팅도 다 다시 해준다.
+- EC2도 처음에 리눅스로 만들어서 다시 만들었었는데.. 몇 번 만들다보니 이제 튜토리얼 안보고 걍 만들 수 있게 되었다. 하하 
+- 아무튼 머리가 나쁘면 몸이 고생을 한다.
+- !!절대!! 노출하지 말자. 누군가 재미삼아 요금 폭탄을 떨궈버릴지 모른다..
+
