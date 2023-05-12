@@ -225,3 +225,9 @@ RUN python3 -m pip install --upgrade pillow
 
 - 난 무엇이든 해내
 
+##### 502 Bad Gateway
+
+- nginx에러다.
+
+<img width="1159" alt="image" src="https://github.com/CEOS-Developers/django_rest_framework_17th/assets/76674422/c8f0e231-71ed-4c82-ac9c-83c8cc9fd6bf">
+
