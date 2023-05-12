@@ -166,6 +166,12 @@ $ LDFLAGS="-L$(brew --prefix openssl@1.1)/lib" CFLAGS="-I$(brew --prefix openssl
 - AWS EC2, RDS 를 만들었다.
 - 돈 나갈까 무서웠지만 잘 한것 같다.
 
+#### Elastic IP Allocation
+
+- 탄력적 IP를 설정하지 않으면 일정 시간마다, 혹은 서버를 껐다킬 때 IP가 바뀌어버린다.
+- 그럴때마다 깃헙 secret의 HOST도 수정하고, env파일도 수정하고, 그러는건 너무너무 귀찮다.
+- 돈이 나가긴 하지만,, 설정해주도록 하자.
+
 ## 흐름부터 알자
 
 - Github Action의 `deploy.yml`가 가장 먼저 실행된다.
@@ -232,6 +238,53 @@ RUN python3 -m pip install --upgrade pillow
 <img width="1159" alt="image" src="https://github.com/CEOS-Developers/django_rest_framework_17th/assets/76674422/c8f0e231-71ed-4c82-ac9c-83c8cc9fd6bf">
 
 <img width="1181" alt="image" src="https://github.com/CEOS-Developers/django_rest_framework_17th/assets/76674422/d32b9741-82ef-4071-b24f-ca3699d67114">
+
 - 그러다가 accounts/register/로 get요청을 했는데 DRF페이지가 나왔다(!!)
 - 그럼 혹시 DB와의 연결설정에 문제가 있는거 아닐까 싶어 확인해봤다.
+- 그럼 그렇지 보안그룹과 관련된 오류였다. 포트 22, 80, 3306 요놈들 적절히 열어주어야 한다.
 
+##### MySQL Data Import error (ERROR 1049 (42000): Unknown database 'DB명')
+
+- DB에 스키마를 만들지 않아서 생긴 오류다.
+
+> create schema DB이름;
+
+
+##### ERROR 1146, "Table doesn't exist"
+
+- 이제 이게 마이그레이션 오류이다.
+- 내 파이참에서 .env파일을 수정해 RDS에 접근했다.
+  - 단순히 .env.prod를 복붙하면 된다.
+- 마이그레이션 후 테이블이 생긴걸 확인했다.
+
+<img width="1001" alt="image" src="https://github.com/CEOS-Developers/django_rest_framework_17th/assets/76674422/ebb11b80-6a0e-4939-9daa-359e00555c44">
+
+- 난 무엇이든 해내
+
+
+## Connect Server with SSH (Terminal)
+
+- 매 변경마다 깃헙에 push해서 액션을 기다리는 것은 따분한 일이다.
+- 게다가 이런식으로 하면 내가 로그를 확인할 수 없다. 모든 디버깅의 시작은 로그 확인이다.
+- 난 맥을 쓰니까 윈도우는 모른다. 맥으로 접속, 제어하는 방법을 알아보자.
+
+### 명령어들
+
+- `ssh -i {key.pem} {server주소}` 로 접속할 수 있다.
+- `sudo su`: root 계정으로 접속한다.
+- `docker ps`: 도커 컨테이너를 확인한다. 16b784c529c5 이렇게 생긴게 우리가 만든 web과 nginx이다.
+- `docker stop {container id}`: 도커 컨테이너를 종료한다.
+- `sudo docker-compose -f /home/ubuntu/srv/ubuntu/docker-compose.prod.yml up --build`: 도커 컴포즈를 실행한다.
+  - `-d`는 뺐다. 터미널에서 로그를 직접 확인하기 위함이다. 백그라운드로 실행하면 의미가 없다..
+
+<img width="944" alt="image" src="https://github.com/CEOS-Developers/django_rest_framework_17th/assets/76674422/26433318-6cb7-499c-ae9d-4721c113ed20">
+
+- 이제 터미널에서 로그를 확인할 수 있다. (이걸로 디버깅을 해야한다.)
+- 아무튼 배포 성공~!
+
+# 후기
+
+- 이제 HTTP STATUS는 저에게 도전과제 같은 느낌입니다.. 저는 499 에러 도전과제도 달성(?)했는데 여러분들은 어디까지 달성해봤나요
+- 디버깅의 난이도가 높았습니다. 문제의 원인을 찾는 일이 쉽진 않았습니다.
+- nginx나 docker compose나.. 여러가지 새로운 개념을 한꺼번에 다루어서 그랬던 것 같습니다.
+- 지금까지 한 과제 중 저에게 가장 유익한 과제였습니다. 감사합니다. 
