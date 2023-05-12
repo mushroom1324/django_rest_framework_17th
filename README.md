@@ -231,3 +231,17 @@ RUN python3 -m pip install --upgrade pillow
 
 <img width="1159" alt="image" src="https://github.com/CEOS-Developers/django_rest_framework_17th/assets/76674422/c8f0e231-71ed-4c82-ac9c-83c8cc9fd6bf">
 
+> nginx    | ???.??.???.?? - - [12/May/2023:07:15:51 +0000] "GET / HTTP/1.1" 500 141 "-" "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.117 Safari/537.36" "-"
+
+- 에러 못고쳐서 허덕이고있는데 이상한 요청이 들어왔다.
+- 이사람은 500에러인걸 보니 앱단에서 터진 에러같은데, 나는 nginx에서 에러 터지는데 이사람은 어떻게 들어갔지?
+- 이사람은 주소 어떻게 알았지?
+- 아니 이사람은 누구지? 내가 한건 아닌 것 같은데
+
+```shell
+nginx    | ... - - [12/May/2023:07:24:46 +0000] "GET / HTTP/1.1" 500 141 "-" "Mozilla/5.0 (compatible; CensysInspect/1.1; +https://about.censys.io/)" "-"
+nginx    | ... - - [12/May/2023:07:24:47 +0000] "PRI * HTTP/2.0" 400 157 "-" "-" "-"
+```
+
+- 막 요청이 들어온다.. 이상한 일이다
+
