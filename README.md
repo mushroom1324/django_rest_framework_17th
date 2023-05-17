@@ -26,6 +26,8 @@
 
 ### TLS Handshake
 
+- 간단한 TLS에 대해 설명하겠지만, 버전과 extension, 개인의 구현에 따라 다름
+
 <img width="362" alt="image" src="https://github.com/CEOS-Developers/django_rest_framework_17th/assets/76674422/bf6a2a77-af58-48d0-afb5-d86d00a7e2bb">
 
 [출처 IBM Docs](https://www.ibm.com/docs/en/ibm-mq/9.1?topic=tls-overview-ssltls-handshake)
@@ -34,17 +36,38 @@
   - 사용할 TLS 버전, 클라이언트가 지원하는 CipherSuite, 무작위 바이트 문자열을 포함
 - 서버가 _Server Hello_ 송신
   - 클라이언트가 지원하는 CipherSuite중 하나, 세션ID, 무작위 바이트 문자열을 포함 
-- 서버가 Server Certificate도 송신함 ( 디지털 서명 )
+- 서버가 Server Certificate도 송신함
 - 클라이언트가 서버의 'Client Certificate 요청'에 따라 Client Certificate 송신
 - 클라이언트가 연결에 쓰일 비밀 키 송신함 (무작위 바이트 문자열으로 만듦)
 - 서버가 Client Certificate를 검증하고 비밀 키로 암호화된 _Finished_ 송신
 - 클라이언트가 비밀 키로 암호화된 _Finished_ 송신
 
+##### Cipher
+
+- 암호화 알고리즘으로, 여러가지가 있다.
+- 브라우저(의 버전)에 따라 지원하는 Cipher가 다르다.
+- 그래서 클라이언트가 *Client Hello*를 보낼 때 지원하는 Cipher 리스트를 보내고, 서버는 그 중 가장 강력한 알고리즘을 선택한다.
+  - 공격자가 악의적으로 취약한 Cipher를 선택하도록 하는 공격 기법이 있다.. 사실 꼬리에 꼬리를 무는 끝도 없는 내용이라 생략하겠다.
+  - (요약) 완벽한 보안은 없다
+
+##### Certificate
+
+- 전송시 암호화되는 인증서
+
+<img width="457" alt="image" src="https://github.com/CEOS-Developers/django_rest_framework_17th/assets/76674422/89ca7935-a6b1-460b-bb06-32666fe17b42">
+
+<img width="455" alt="image" src="https://github.com/CEOS-Developers/django_rest_framework_17th/assets/76674422/8c6e046a-b0bb-4125-bfbb-7f67c615b243">
+
+[출처 youtube Udacity](https://www.youtube.com/watch?v=O2AU1J5HuZY)
+
+- Server Certificate에서 서버의 공개키, 암호화 방식, 보낸 서버 정보 등 확인 가능
+- 공격자가 요청을 탈취하여 클라이언트의 요청을 조작하는 행위로 인한 보안 취약점을 보완
+
 # HTTPS 설정
 
 ## ALB(ELB) : Load Balancer
 
-- 웹 서비스에 걸리는 부하를 분산해준다
+- 웹 서비스에 걸리는 부하를 분산
 
 ### ELB : Elasitc Load Balancer
 
@@ -83,8 +106,18 @@
 ### 1️⃣ AWS의 Route 53에서 원하는 도메인을 구입한다.
 
 - 가비아로 `ceos-popcoder.store`/1년 구입 (500원 이라서 `.store`로 했다..)
+- 구입함으로써 도메인 `ceos-pocoder.store`를 소유하게 되었다.
 
 ### 2️⃣ AWS의 Certificate Manager에서 원하는 도메인에 대한 SSL 인증서를 받는다.
+
+- public certificate를 요청한다.
+
+#### Certificate
+
+<img width="362" alt="image" src="https://github.com/CEOS-Developers/django_rest_framework_17th/assets/76674422/bf6a2a77-af58-48d0-afb5-d86d00a7e2bb">
+
+- 앞서 가져왔던 TLS Handshake 이미지를 다시 가져왔다.
+- 사진에서 보이는 Certificate Request, Certificate를 보내는데, 이것에 관한 설정을 하는 것이다.
 
 <img width="826" alt="image" src="https://github.com/CEOS-Developers/django_rest_framework_17th/assets/76674422/4129b879-d905-4bab-9e22-35634b9ecc21">
 
@@ -115,6 +148,7 @@
 <img width="1158" alt="image" src="https://github.com/CEOS-Developers/django_rest_framework_17th/assets/76674422/c1715d70-951a-4697-bb66-9763773f79c8">
 
 - 로드밸런서 등록 완료 (스터디 자료 참고)
+- 로드밸런서에 대해서는 앞서 언급하였음
 
 ### 4️⃣ 80번 포트로 들어오는 요청은 Redirect, 443번 포트로 들어오는 요청을 인스턴스로 연결해준다.
 
@@ -128,6 +162,9 @@ if ($http_x_forwarded_proto != 'https') {
 ```
 
 - 리디렉션 로직을 ALB와 nginx에서 구현
+- 이렇게 함으로써 80번 포트로 들어오는 요청을 Application Layer단에서 리다이렉션 처리
+- '로드밸런서'의 의미로써 설명하자면, 우리 과제의 서버엔 로드밸런서가 필요 없다
+  - 서버가 하나기 때문에, 트래픽 부하를 관리할 필요 없다(할 수 없다)
 
 ### 5️⃣ 등록한 로드밸런서를 AWS Route 53의 도메인의 레코드에 등록한다.
 
@@ -135,9 +172,29 @@ if ($http_x_forwarded_proto != 'https') {
 
 - A 레코드 등록 완료
 
+#### Record
+
+- A 레코드: 도메인 이름을 IPv4 주소로 매핑 (EC2와 매핑)
+- CNAME 레코드: 도메인 이름을 다른 도메인 이름으로 매핑 (서브 도메인)
+- NS 레코드: 도메인 이름을 네임 서버로 매핑 (도메인을 관리하는 네임 서버의 주소)
+
 ### 6️⃣ ec2 인바운드 규칙 443 추가
 
 <img width="1142" alt="image" src="https://github.com/CEOS-Developers/django_rest_framework_17th/assets/76674422/8f9799fd-3361-4e5d-85a1-a1a63657347d">
 
 - HTTPS 인바운드 규칙 추가 완료
+- 인바운드 규칙을 열어주지 않으면 HTTPS요청을 받을 수 없다
 
+# 과제
+
+<img width="1058" alt="image" src="https://github.com/CEOS-Developers/django_rest_framework_17th/assets/76674422/664cb0f1-d04b-4dbe-a322-c7ee971776ff">
+
+- 난 무엇이든 해내
+
+# 회고
+
+- 이부분은 이론적으로 잘 알고있어야 이후 터지는 문제들에 대해 쉽게 대응할 수 있을 것 같다
+- 단순히 로그 복사 -> 구글에 붙여넣기에 의존하지 않고 능동적으로 문제 파악 및 해결하는 능력을 기르는 것이 중요하다고 판단했다
+- 탄탄한 이론 + 경험이 있어야 가능한 것 같다
+- 컴퓨터네트워크 과목이 도움이 될 줄 몰랐는데.. 도움이 된다.
+- 보안쪽 재밌다
