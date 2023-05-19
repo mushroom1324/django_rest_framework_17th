@@ -191,7 +191,7 @@ if ($http_x_forwarded_proto != 'https') {
 
 - 80포트로 오는 HTTP 리퀘스트를 443 포트 (HTTPS)로 리다이렉트 하여 오늘 구현한 모든 로직이 정상적으로 작동함을 확인
 
-<img width="648" alt="image" src="https://github.com/CEOS-Developers/django_rest_framework_17th/assets/76674422/92f3e574-db63-47b8-bc85-52100177f900">
+<img width="999" alt="image" src="https://github.com/CEOS-Developers/django_rest_framework_17th/assets/76674422/0eeb410c-35ee-468a-835f-3a2965acdbb8">
 
 - HTTPS 리퀘스트를 보내도 마찬가지로 정상 작동함을 확인
 
